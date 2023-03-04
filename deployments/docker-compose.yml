@@ -1,6 +1,27 @@
+version: "3.9"
 services:
+  web:
+    image: viktorcitaku/beer-app
+    build:
+      context: ../
+      dockerfile: build/deploy/Dockerfile
+    restart: always
+    environment:
+      - PORT=8080
+      - POSTGRES_URL=postgres://test:test@db:5432/beer
+      - MONGO_URL=mongodb://test:test@mongo_db:27017
+      - REDIS_URL=redis://cache:6379
+      - BEER_STATIC_FILES=/opt/app
+    ports:
+      - "8080:8080"
+    expose:
+      - 8080
+    depends_on:
+      - db
+      - mongo_db
+      - cache
   db:
-    image: postgres:alpine
+    image: postgres
     restart: always
     volumes:
       - ./../scripts/db/init.sql:/docker-entrypoint-initdb.d/db.sql
@@ -9,7 +30,7 @@ services:
       - POSTGRES_USER=test
       - POSTGRES_PASSWORD=test
     ports:
-      - 5432:5432
+      - "5432:5432"
   mongo_db:
     image: mongo
     restart: always
@@ -17,8 +38,8 @@ services:
       MONGO_INITDB_ROOT_USERNAME: test
       MONGO_INITDB_ROOT_PASSWORD: test
     ports:
-      - 27017:27017
+      - "27017:27017"
   cache:
-    image: redis:alpine
+    image: redis
     ports:
-      - 6379:6379
+      - "6379:6379"

@@ -1,6 +1,7 @@
 package beerapi
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"io"
 	"log"
@@ -24,6 +25,11 @@ func NewClient(beersApiUrl string) *Client {
 		beersApiUrl: beersApiUrl,
 		client: &http.Client{
 			Timeout: 10 * time.Second,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
 		},
 	}
 }
@@ -35,8 +41,8 @@ func (c *Client) GetBeers(pairingFood, bitterness, fermentation string) ([]BeerR
 		return nil, err
 	}
 
-	defer func(Body io.ReadCloser) {
-		err = Body.Close()
+	defer func(body io.ReadCloser) {
+		err = body.Close()
 		if err != nil {
 			log.Printf("Error closing body: %v", err)
 		}

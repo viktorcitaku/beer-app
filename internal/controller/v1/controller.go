@@ -39,7 +39,7 @@ func (c *Controller) HelloWorld(w http.ResponseWriter, _ *http.Request) {
 	_, _ = w.Write([]byte("Hello World"))
 }
 
-func (c *Controller) SaveUserProfiles(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) SaveUserProfile(w http.ResponseWriter, r *http.Request) {
 	var err error
 	err = r.ParseForm()
 	if err != nil {
@@ -145,14 +145,6 @@ func (c *Controller) SaveBeers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, _ := r.Cookie("BEER_SESSION")
-	_, err = c.cacheProvider.GetRedisCache().Get(r.Context(), cookie.Value).Result()
-	if err != nil {
-		log.Printf("Error getting session: %v\n", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	var saveBeerPayload SaveBeerPayload
 	err = json.NewDecoder(r.Body).Decode(&saveBeerPayload)
 	if err != nil {
@@ -173,6 +165,7 @@ func (c *Controller) SaveBeers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cookie, _ := r.Cookie("BEER_SESSION")
 	userPreferences = &repository.UserPreferences{
 		Id:        GenerateUniqueID(saveBeerPayload.ID, cookie.Value),
 		BeerId:    uint(saveBeerPayload.ID),
@@ -205,13 +198,6 @@ func (c *Controller) GetUserPreferences(w http.ResponseWriter, r *http.Request) 
 	}
 
 	cookie, _ := r.Cookie("BEER_SESSION")
-	_, err = c.cacheProvider.GetRedisCache().Get(r.Context(), cookie.Value).Result()
-	if err != nil {
-		log.Printf("Error getting session: %v\n", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	userPreferences, err := c.userPreferencesCrudRepository.FindByUserEmail(cookie.Value)
 	if err != nil {
 		log.Printf("Error getting user preferences: %v\n", err.Error())
@@ -247,14 +233,6 @@ func (c *Controller) SaveUserPreferences(w http.ResponseWriter, r *http.Request)
 	var err error
 	err = c.sessionValidation(w, r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	cookie, _ := r.Cookie("BEER_SESSION")
-	_, err = c.cacheProvider.GetRedisCache().Get(r.Context(), cookie.Value).Result()
-	if err != nil {
-		log.Printf("Error getting session: %v\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -308,13 +286,13 @@ func (c *Controller) sessionValidation(w http.ResponseWriter, r *http.Request) e
 		return errors.New("error getting cookie")
 	}
 
-	_, err = c.cacheProvider.GetRedisCache().Get(r.Context(), cookie.Value).Result()
+	value := cookie.Value
+	log.Printf("Cookie Value: %v\n", value)
+	err = c.cacheProvider.GetRedisCache().Get(r.Context(), value).Err()
 	if err != nil {
 		log.Printf("Error session mismatch: %v\n", err.Error())
 		return errors.New("error session mismatch")
 	}
-
-	http.SetCookie(w, cookie)
 
 	return nil
 }

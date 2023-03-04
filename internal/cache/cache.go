@@ -15,7 +15,6 @@ type Provider interface {
 }
 
 func ConnectRedis(redisUrl string) *Connection {
-	// "redis://<user>:<pass>@localhost:6379/<db>"
 	opt, err := redis.ParseURL(redisUrl)
 	if err != nil {
 		log.Fatalf("Redis URL is invalid: %v\n", err)

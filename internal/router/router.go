@@ -1,6 +1,7 @@
 package router
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
@@ -15,11 +16,13 @@ func Router(controller *v1.Controller, path string) *chi.Mux {
 	mux.Use(middleware.Logger)
 
 	mux.Get("/api/v1/hello-world", controller.HelloWorld)
-	mux.Post("/api/v1/user-profiles", controller.SaveUserProfiles)
+	mux.Post("/api/v1/user-profiles", controller.SaveUserProfile)
 	mux.Get("/api/v1/beers", controller.GetBeers)
 	mux.Post("/api/v1/beers", controller.SaveBeers)
 	mux.Get("/api/v1/user-preferences", controller.GetUserPreferences)
 	mux.Post("/api/v1/user-preferences", controller.SaveUserPreferences)
+
+	log.Printf("path that is set %v\n", path)
 
 	FileServer(mux, "/", http.Dir(path))
 
@@ -34,7 +37,7 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 	}
 
 	if path != "/" && path[len(path)-1] != '/' {
-		r.Get(path, http.RedirectHandler(path+"/", 301).ServeHTTP)
+		r.Get(path, http.RedirectHandler(path+"/", http.StatusMovedPermanently).ServeHTTP)
 		path += "/"
 	}
 	path += "*"

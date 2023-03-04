@@ -16,10 +16,11 @@ type HttpServer struct {
 	server *http.Server
 }
 
-func NewHttpServer(address string, handler http.Handler) *HttpServer {
+func New(ctx context.Context, address string, handler http.Handler) *HttpServer {
 	return &HttpServer{
+		ctx: ctx,
 		server: &http.Server{
-			Addr:    fmt.Sprintf("localhost:%s", address),
+			Addr:    fmt.Sprintf(":%s", address),
 			Handler: handler,
 		},
 	}
@@ -38,6 +39,8 @@ func (s *HttpServer) Run() {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	go s.handleInterruption(sig, srvCtx, srvCancel)
+
+	log.Printf("server is ready for connections, listening on port: %v\n", s.server.Addr)
 
 	// Run server
 	if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {

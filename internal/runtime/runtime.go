@@ -44,7 +44,5 @@ func Run() {
 	ctrl := controller.New(beerApiClient, userProfile, userPreferences, redis)
 
 	// The HTTP Server
-	server.NewHttpServer(cfg.Port, router.Router(ctrl, cfg.StaticFiles)).
-		WithContext(ctx).
-		Run()
+	server.New(ctx, cfg.Port, router.Router(ctrl, cfg.StaticFiles)).Run()
 }

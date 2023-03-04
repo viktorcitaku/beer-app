@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"log"
+	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -16,8 +17,13 @@ func ConnectDatabase(url string) *sql.DB {
 		log.Fatalf("Failed to open database! => %v\n", err)
 	}
 
-	if err = database.Ping(); err != nil {
-		log.Fatalf("Failed to ping database! => %v\n", err)
+	for {
+		if err = database.Ping(); err != nil {
+			log.Printf("Failed to ping database! => %v\n", err)
+			time.Sleep(time.Second * 3)
+			continue
+		}
+		break
 	}
 
 	return database

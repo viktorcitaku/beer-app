@@ -5,21 +5,23 @@ Simple Golang Application using a public API to pickup beers
 
 ```
 Docker: 20.10.22
-Golang: 1.19.5
+Golang: 1.20.1
 Browser: Chrome (latest)
 ```
 
 
 ### How to build and run the application?
 
-Run the dependent services under `deployments` folder with following command:
+The Makefile already has the necessary tasks to run the application.
 
-`docker compose up --detach --build`
+Please run the following command to run:
 
-To tear down the above services, run the following:
+```
+make compose-up
+```
 
-`docker compose up --detach --build`
+Please run the following command to shutdown:
 
-Set the environment variable `BEER_STATIC_FILES` with the absolute path of `web` folder.
-
-#### NOTE: WORK IN PROGRESS!!!
+```
+make compose-down
+```
