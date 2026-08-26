@@ -39,8 +39,9 @@ func Run() {
 	beerApiClient := beerapi.NewClient(cfg.BeersApiUrl)
 
 	// Initialize controller
-	// NOTE: In production grade applications, the Controller should accept Service and Service would contain 1 or more
-	// repositories, depending on the business logic implementation.
+	// NOTE: In production grade applications, the Controller should accept
+	// Service and Service would contain 1 or more repositories, depending on
+	// the business logic implementation.
 	ctrl := controller.New(beerApiClient, userProfile, userPreferences, redis)
 
 	// The HTTP Server

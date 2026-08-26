@@ -16,7 +16,7 @@ type mongoContainer struct {
 	testcontainers.Container
 }
 
-func setupMongo(ctx context.Context) (*mongoContainer, error) {
+func setupMongo(t testing.TB, ctx context.Context) (*mongoContainer, error) {
 	req := testcontainers.ContainerRequest{
 		Image:        "mongo",
 		ExposedPorts: []string{"27017/tcp"},
@@ -26,10 +26,14 @@ func setupMongo(ctx context.Context) (*mongoContainer, error) {
 		).WithDeadline(60 * time.Second),
 	}
 
-	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
+	container, err := testcontainers.GenericContainer(
+		ctx,
+		testcontainers.GenericContainerRequest{
+			ContainerRequest: req,
+			Started:          true,
+		},
+	)
+	testcontainers.CleanupContainer(t, container)
 	if err != nil {
 		return nil, err
 	}
@@ -39,14 +43,9 @@ func setupMongo(ctx context.Context) (*mongoContainer, error) {
 
 func TestMongoRepository(t *testing.T) {
 	ctx := context.Background()
-	mongo, err := setupMongo(ctx)
-	t.Cleanup(func() {
-		if err := mongo.Terminate(ctx); err != nil {
-			t.Error(err)
-		}
-	})
+	mongo, err := setupMongo(t, ctx)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	endpoint, err := mongo.Endpoint(ctx, "mongodb")

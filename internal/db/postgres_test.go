@@ -18,8 +18,12 @@ type postgresContainer struct {
 	testcontainers.Container
 }
 
-func setupPostgres(ctx context.Context, dbname, user, password string) (*postgresContainer, error) {
-	abs, err := filepath.Abs("./../../../../scripts/db/")
+func setupPostgres(
+	t testing.TB,
+	ctx context.Context,
+	dbname, user, password string,
+) (*postgresContainer, error) {
+	abs, err := filepath.Abs("../../scripts/db")
 	if err != nil {
 		return nil, err
 	}
@@ -48,10 +52,14 @@ func setupPostgres(ctx context.Context, dbname, user, password string) (*postgre
 	}
 
 	var container testcontainers.Container
-	container, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
+	container, err = testcontainers.GenericContainer(
+		ctx,
+		testcontainers.GenericContainerRequest{
+			ContainerRequest: req,
+			Started:          true,
+		},
+	)
+	testcontainers.CleanupContainer(t, container)
 	if err != nil {
 		return nil, err
 	}
@@ -64,14 +72,9 @@ func TestReadFromDatabase(t *testing.T) {
 	const dbname = "beer"
 	const user = "test"
 	const password = "test"
-	postgres, err := setupPostgres(ctx, dbname, user, password)
-	t.Cleanup(func() {
-		if err := postgres.Terminate(ctx); err != nil {
-			t.Error(err)
-		}
-	})
+	postgres, err := setupPostgres(t, ctx, dbname, user, password)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	host, err := postgres.Host(ctx)
@@ -84,7 +87,14 @@ func TestReadFromDatabase(t *testing.T) {
 		t.Error(err)
 	}
 
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port.Port(), user, password, dbname)
+	connStr := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		host,
+		port.Port(),
+		user,
+		password,
+		dbname,
+	)
 
 	conn := db.ConnectDatabase(connStr)
 	defer db.CloseConnection()

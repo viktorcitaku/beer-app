@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -65,7 +66,7 @@ func (s *HttpServer) handleInterruption(
 		go func() {
 			<-shutdownCtx.Done()
 
-			if shutdownCtx.Err() == context.DeadlineExceeded {
+			if errors.Is(shutdownCtx.Err(), context.DeadlineExceeded) {
 				log.Fatal("graceful shutdown timed out... forcing exit.")
 			}
 		}()

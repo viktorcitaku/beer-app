@@ -5,7 +5,7 @@ Simple Golang Application using a public API to pickup beers
 
 ```
 Docker: 20.10.22
-Golang: 1.20.1
+Golang: 1.27.0
 Browser: Chrome (latest)
 ```
 

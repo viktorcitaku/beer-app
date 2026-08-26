@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"log"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 type UserProfileRepository struct {
@@ -100,7 +100,7 @@ func (u *UserPreferencesRepository) Save(preferences *UserPreferences) error {
 	}
 
 	updateOptions := options.Replace().SetUpsert(true)
-	filter := bson.D{{"_id", preferences.Id}}
+	filter := bson.D{{Key: "_id", Value: preferences.Id}}
 	_, err := coll.ReplaceOne(u.ctx, filter, preferences, updateOptions)
 	if err != nil {
 		return err
@@ -116,7 +116,7 @@ func (u *UserPreferencesRepository) FindById(id uint) (*UserPreferences, error) 
 	}
 
 	var err error
-	filter := bson.D{{"_id", id}}
+	filter := bson.D{{Key: "_id", Value: id}}
 	cur, err := coll.Find(u.ctx, filter)
 	if err != nil {
 		return nil, err
@@ -141,7 +141,7 @@ func (u *UserPreferencesRepository) FindByBeerId(beerId uint) (*UserPreferences,
 	}
 
 	var err error
-	filter := bson.D{{"beer_id", beerId}}
+	filter := bson.D{{Key: "beer_id", Value: beerId}}
 	cur, err := coll.Find(u.ctx, filter)
 	if err != nil {
 		return nil, err
@@ -171,7 +171,7 @@ func (u *UserPreferencesRepository) FindByUserEmail(email string) ([]*UserPrefer
 	}
 
 	var err error
-	filter := bson.D{{"user_email", email}}
+	filter := bson.D{{Key: "user_email", Value: email}}
 	cur, err := coll.Find(u.ctx, filter)
 	if err != nil {
 		return nil, err

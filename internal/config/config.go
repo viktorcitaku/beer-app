@@ -19,7 +19,7 @@ func init() {
 	flag.StringVar(&postgresUrl, "postgres-url", "postgres://test:test@localhost:5432/beer", "The PostgresSQL URL.")
 	flag.StringVar(&mongoUrl, "mongo-url", "mongodb://test:test@localhost:27017", "The Mongo DB URL")
 	flag.StringVar(&redisUrl, "redis-url", "redis://localhost:6379", "The Redis URL")
-	flag.StringVar(&beersApiUrl, "beers-api-url", "https://api.punkapi.com/v2/beers", "The Punk API URL")
+	flag.StringVar(&beersApiUrl, "beers-api-url", "https://punkapi-alxiw.amvera.io/v3/beers?page=1", "The Punk API URL")
 	flag.Parse()
 
 	// Fallback to environment variable

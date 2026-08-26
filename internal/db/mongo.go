@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 var mongoClient *mongo.Client
@@ -20,7 +20,7 @@ func ConnectMongo(ctx context.Context, url string) *mongo.Client {
 		log.Fatalf("Mongo Client Options are invalid: %v\n", err)
 	}
 
-	mongoClient, err = mongo.Connect(ctx, clientOptions)
+	mongoClient, err = mongo.Connect(clientOptions)
 	if err != nil {
 		log.Fatalf("Failed to connect to Mongo Database! => %v\n", err)
 	}

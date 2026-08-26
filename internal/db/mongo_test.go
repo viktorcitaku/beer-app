@@ -9,14 +9,14 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"github.com/viktorcitaku/beer-app/internal/db"
-	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type mongoContainer struct {
 	testcontainers.Container
 }
 
-func setupMongo(ctx context.Context) (*mongoContainer, error) {
+func setupMongo(t testing.TB, ctx context.Context) (*mongoContainer, error) {
 	req := testcontainers.ContainerRequest{
 		Image:        "mongo",
 		ExposedPorts: []string{"27017/tcp"},
@@ -26,10 +26,14 @@ func setupMongo(ctx context.Context) (*mongoContainer, error) {
 		).WithDeadline(60 * time.Second),
 	}
 
-	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
+	container, err := testcontainers.GenericContainer(
+		ctx,
+		testcontainers.GenericContainerRequest{
+			ContainerRequest: req,
+			Started:          true,
+		},
+	)
+	testcontainers.CleanupContainer(t, container)
 	if err != nil {
 		return nil, err
 	}
@@ -39,14 +43,9 @@ func setupMongo(ctx context.Context) (*mongoContainer, error) {
 
 func TestReadWriteMongo(t *testing.T) {
 	ctx := context.Background()
-	mongo, err := setupMongo(ctx)
-	t.Cleanup(func() {
-		if err := mongo.Terminate(ctx); err != nil {
-			t.Error(err)
-		}
-	})
+	mongo, err := setupMongo(t, ctx)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	endpoint, err := mongo.Endpoint(ctx, "mongodb")
@@ -62,7 +61,7 @@ func TestReadWriteMongo(t *testing.T) {
 	}
 
 	coll := client.Database("school").Collection("students")
-	address1 := Address{"1 Lakewood Way", "Elwood City", "PA"}
+	address1 := Address{Street: "1 Lakewood Way", City: "Elwood City", State: "PA"}
 	student1 := Student{FirstName: "Arthur", Address: address1, Age: 8}
 	res, err := coll.InsertOne(ctx, student1)
 	if err != nil {
@@ -72,7 +71,9 @@ func TestReadWriteMongo(t *testing.T) {
 	fmt.Printf("Mongo Client InsertOne result: %v\n", res.InsertedID)
 
 	var result bson.D
-	if err = coll.FindOne(ctx, bson.D{{"first_name", "Arthur"}}).Decode(&result); err != nil {
+	if err = coll.
+		FindOne(ctx, bson.D{bson.E{Key: "first_name", Value: "Arthur"}}).
+		Decode(&result); err != nil {
 		t.Error(err)
 	}
 

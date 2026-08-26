@@ -1,3 +1,5 @@
+.PHONY: fast-run build run compose-up compose-down
+
 fast-run:
 	go run cmd/beer/main.go
 

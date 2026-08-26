@@ -3,9 +3,11 @@ package beerapi
 import (
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -34,9 +36,23 @@ func NewClient(beersApiUrl string) *Client {
 	}
 }
 
-func (c *Client) GetBeers(pairingFood, bitterness, fermentation string) ([]BeerResult, error) {
-	var err error
-	r, err := c.client.Get(c.beersApiUrl)
+func (c *Client) GetBeers(
+	pairingFood,
+	bitterness,
+	fermentation string,
+) ([]BeerResult, error) {
+	requestURL, err := url.Parse(c.beersApiUrl)
+	if err != nil {
+		return nil, fmt.Errorf("parse beer API URL: %w", err)
+	}
+
+	if pairingFood != "" {
+		query := requestURL.Query()
+		query.Set("food", strings.ReplaceAll(pairingFood, "_", " "))
+		requestURL.RawQuery = query.Encode()
+	}
+
+	r, err := c.client.Get(requestURL.String())
 	if err != nil {
 		return nil, err
 	}
@@ -48,6 +64,10 @@ func (c *Client) GetBeers(pairingFood, bitterness, fermentation string) ([]BeerR
 		}
 	}(r.Body)
 
+	if r.StatusCode < http.StatusOK || r.StatusCode >= http.StatusMultipleChoices {
+		return nil, fmt.Errorf("beer API returned %s", r.Status)
+	}
+
 	var beers []beer
 	err = json.NewDecoder(r.Body).Decode(&beers)
 	if err != nil {
@@ -56,7 +76,7 @@ func (c *Client) GetBeers(pairingFood, bitterness, fermentation string) ([]BeerR
 
 	var results []BeerResult
 	for _, b := range beers {
-		if filter(b, pairingFood, bitterness, fermentation) {
+		if filter(b, bitterness, fermentation) {
 			results = append(results, BeerResult{
 				ID:   b.ID,
 				Name: b.Name,
@@ -67,21 +87,7 @@ func (c *Client) GetBeers(pairingFood, bitterness, fermentation string) ([]BeerR
 	return results, nil
 }
 
-func filter(beer beer, pf, b, f string) bool {
-	pfMatch := -1
-	if pf != "" {
-		sentences := beer.FoodPairing
-		for _, sentence := range sentences {
-			for _, word := range strings.Split(pf, "_") {
-				if strings.Contains(sentence, word) {
-					pfMatch = 1
-				}
-			}
-		}
-	} else {
-		pfMatch = 0
-	}
-
+func filter(beer beer, b, f string) bool {
 	bMatch := -1
 	if b != "" {
 		switch b {
@@ -119,7 +125,7 @@ func filter(beer beer, pf, b, f string) bool {
 		fMatch = 0
 	}
 
-	return pfMatch != -1 && bMatch != -1 && fMatch != -1
+	return bMatch != -1 && fMatch != -1
 }
 
 func highIbuScale(ibu float64) bool {

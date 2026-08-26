@@ -49,7 +49,9 @@ func (c *Controller) SaveUserProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	email := r.Form["email"][0]
-	err = c.cacheProvider.GetRedisCache().Set(r.Context(), email, time.Now(), 0).Err()
+	err = c.cacheProvider.GetRedisCache().
+		Set(r.Context(), email, time.Now(), 0).
+		Err()
 	if err != nil {
 		log.Printf("Error setting session: %v\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -153,7 +155,8 @@ func (c *Controller) SaveBeers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userPreferences, err := c.userPreferencesCrudRepository.FindByBeerId(uint(saveBeerPayload.ID))
+	userPreferences, err := c.userPreferencesCrudRepository.
+		FindByBeerId(uint(saveBeerPayload.ID))
 	if err != nil {
 		log.Printf("Error getting user preferences: %v\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -207,15 +210,17 @@ func (c *Controller) GetUserPreferences(w http.ResponseWriter, r *http.Request) 
 
 	var userBeerPreferencesPayload []UserBeerPreferencesPayload
 	for _, userPreference := range userPreferences {
-		userBeerPreferencesPayload = append(userBeerPreferencesPayload, UserBeerPreferencesPayload{
-			ID:                 int(userPreference.Id),
-			Name:               userPreference.BeerName,
-			DrunkTheBeerBefore: userPreference.DrunkTheBeerBefore,
-			GotDrunk:           userPreference.GotDrunk,
-			LastTime:           userPreference.LastTime,
-			Rating:             int(userPreference.Rating),
-			Comment:            userPreference.Comment,
-		})
+		userBeerPreferencesPayload = append(
+			userBeerPreferencesPayload,
+			UserBeerPreferencesPayload{
+				ID:                 int(userPreference.Id),
+				Name:               userPreference.BeerName,
+				DrunkTheBeerBefore: userPreference.DrunkTheBeerBefore,
+				GotDrunk:           userPreference.GotDrunk,
+				LastTime:           userPreference.LastTime,
+				Rating:             int(userPreference.Rating),
+				Comment:            userPreference.Comment,
+			})
 	}
 
 	err = json.NewEncoder(w).Encode(userBeerPreferencesPayload)
@@ -254,7 +259,9 @@ func (c *Controller) SaveUserPreferences(w http.ResponseWriter, r *http.Request)
 
 	for _, userBeerPreferencesPayload := range userBeerPreferencesPayloads {
 		var userPreferences *repository.UserPreferences
-		userPreferences, err = c.userPreferencesCrudRepository.FindById(uint(userBeerPreferencesPayload.ID))
+		userPreferences, err = c.userPreferencesCrudRepository.FindById(
+			uint(userBeerPreferencesPayload.ID),
+		)
 		if err != nil {
 			log.Printf("Error getting user preferences: %v\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -279,7 +286,10 @@ func (c *Controller) SaveUserPreferences(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 }
 
-func (c *Controller) sessionValidation(w http.ResponseWriter, r *http.Request) error {
+func (c *Controller) sessionValidation(
+	_ http.ResponseWriter,
+	r *http.Request,
+) error {
 	cookie, err := r.Cookie("BEER_SESSION")
 	if err != nil {
 		log.Printf("Error getting cookie: %v\n", err.Error())
